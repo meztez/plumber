@@ -1,41 +1,44 @@
 #' Convert router to/from OpenAPI specifications
 #' @rdname openapi
-#' @param plumber A plumber router or a plumbable file or directory
+#' @param pr A plumber router or a plumbable file or directory.
 #' @description These functions are used to convert between OpenAPI
-#' specifications and plumber file. Plumber only supports a limited
-#' set of OpenAPI specifications.
-#' @param output An optional filename where to write specifications.
-#' @details OpenAPI is a specifications to describe API. More info
+#' Specifications and plumber file. Plumber only supports a limited
+#' set of OpenAPI Specifications.
+#' @param output An optional filename where to write OpenAPI Specifications.
+#' @param format Either `json` or `yaml`.
+#' @details OpenAPI Specifications are used to document APIs. More info
 #' can be found at (https://www.openapis.org/)
 #' @examples
 #' pr <- plumber$new()
-#' toOpenAPI(pr)
+#' to_open_api(pr)
 #' @export
-toOpenAPI <- function(plumber, output = NULL) {
+to_open_api <- function(plumber, output = NULL) {
   if (!inherits(pr, "plumber")) {
-    if (file.exists(plumber) && file.info(plumber)$isdir) {
-      pr <- plumb(dir = plumber)
-    } else {
-      pr <- plumb(plumber)
+    if (file.exists(plumber)) {
+      if (file.info(plumber)$isdir) {
+        pr <- plumb(dir = plumber)
+      } else {
+        pr <- plumb(plumber)
+      }
     }
   }
-  spec <- pr$openAPISpec()
+  spec <- pr$apiSpec()
   open_api_url <- {
-    apiURL1 <- getOption("plumber.apiURL")
-    apiURL2 <- urlHost(scheme = getOption("plumber.apiScheme", ""),
-                       host   = getOption("plumber.apiHost", ""),
-                       port   = getOption("plumber.apiPort", ""),
-                       path   = getOption("plumber.apiPath", ""),
-                       changeHostLocation = TRUE)
-    priorizeProperty(apiURL1, apiURL2)
+    api_url_1 <- getOption("plumber.apiURL")
+    api_url_2 <- urlHost(scheme = getOption("plumber.apiScheme", ""),
+                         host   = getOption("plumber.apiHost", ""),
+                         port   = getOption("plumber.apiPort", ""),
+                         path   = getOption("plumber.apiPath", ""),
+                         changeHostLocation = TRUE)
+    priorizeProperty(api_url_1, api_url_2)
   }
 
   spec$servers$url <- open_api_url
-  spec$servers$description <- "OpenAPI"
 
   spec <- jsonlite::toJSON(spec, auto_unbox = TRUE)
   if (!is.null(output)) {
-    return(writeLines(spec, output))
+    writeLines(spec, output)
+    return()
   }
   return(spec)
 }

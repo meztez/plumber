@@ -10,9 +10,9 @@
 #' can be found at (https://www.openapis.org/)
 #' @examples
 #' pr <- plumber$new()
-#' to_open_api(pr)
+#' to_openapi(pr)
 #' @export
-to_open_api <- function(plumber, output = NULL) {
+to_openapi <- function(plumber, output = NULL) {
   if (!inherits(pr, "plumber")) {
     if (file.exists(plumber)) {
       if (file.info(plumber)$isdir) {
@@ -23,7 +23,7 @@ to_open_api <- function(plumber, output = NULL) {
     }
   }
   spec <- pr$apiSpec()
-  open_api_url <- {
+  openapi_url <- {
     api_url_1 <- getOption("plumber.apiURL")
     api_url_2 <- urlHost(scheme = getOption("plumber.apiScheme", ""),
                          host   = getOption("plumber.apiHost", ""),
@@ -33,7 +33,7 @@ to_open_api <- function(plumber, output = NULL) {
     priorizeProperty(api_url_1, api_url_2)
   }
 
-  spec$servers$url <- open_api_url
+  spec$servers$url <- openapi_url
 
   spec <- jsonlite::toJSON(spec, auto_unbox = TRUE)
   if (!is.null(output)) {
@@ -48,7 +48,7 @@ to_open_api <- function(plumber, output = NULL) {
 #' @param format Input file format. Either "json" or "yml". If not
 #' provided, will be guessed from file extension.
 #' @export
-fromOpenAPI <- function(openapi, format = c("json", "yaml")) {
+from_openapi <- function(openapi, format = c("json", "yaml")) {
   format <- match.arg(format)
   spec <- new.env()
   # if (tools::file_ext(openapi) == "yaml" || format == "yaml") {
@@ -66,10 +66,10 @@ fromOpenAPI <- function(openapi, format = c("json", "yaml")) {
   # }
   mapply(assign, names(s), s, MoreArgs = list(envir = spec))
   return(spec)
-  #stubSpec(spec)
+  stubSpec(spec)
 }
 
-#' @
+#' @noRd
 stubSpec <- function(spec) {
   l <- function(lines, value, field) {
     if (is.null(value)) return(lines)

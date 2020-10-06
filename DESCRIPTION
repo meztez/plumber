@@ -64,6 +64,7 @@ Collate:
     'includes.R'
     'json.R'
     'new-rstudio-project.R'
+    'openapi-from-to.R'
     'openapi-spec.R'
     'openapi-types.R'
     'paths.R'

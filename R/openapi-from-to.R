@@ -51,41 +51,57 @@ to_openapi <- function(plumber, output = NULL) {
 from_openapi <- function(openapi, format = c("json", "yaml")) {
   format <- match.arg(format)
   spec <- new.env()
-  # if (tools::file_ext(openapi) == "yaml" || format == "yaml") {
-  #   if (!requireNamespace("yaml", quietly = TRUE)) {
-  #     stop("The yaml package is not available but is required in order to parse yaml specifications.\ninstall.packages(\"yaml\")",
-  #          call. = FALSE)
-  #   }
-  #   if (stringi::stri_detect_fixed(openapi, "\n")) {
-  #     s <- yaml::yaml.load(openapi)
-  #   } else {
-  #     s <- yaml::read_yaml(openapi)
-  #   }
-  # } else {
+  if (tools::file_ext(openapi) %in% c("yml", "yaml") || format == "yaml") {
+    if (!requireNamespace("yaml", quietly = TRUE)) {
+      stop("The yaml package is not available but is required in order to parse yaml specifications.\ninstall.packages(\"yaml\")",
+           call. = FALSE)
+    }
+    if (stringi::stri_detect_fixed(openapi, "\n")) {
+      s <- yaml::yaml.load(openapi)
+    } else {
+      s <- yaml::read_yaml(openapi)
+    }
+  } else {
   s <- jsonlite::fromJSON(openapi)
-  # }
+  }
   mapply(assign, names(s), s, MoreArgs = list(envir = spec))
-  return(spec)
   stubSpec(spec)
+  return(spec)
 }
 
 #' @noRd
 stubSpec <- function(spec) {
-  l <- function(lines, value, field) {
+
+  info_lines <- function(lines, value, field) {
     if (is.null(value)) return(lines)
+    if (is.list(value)) {
+      value <- paste0("list(\"", paste0(names(value), "\" = ", value, collapse = ", "), ")")
+    }
     line <- paste0("#* @api", field, " ", value)
-    c(lines, lines)}
-  options("plumber.apiURL" = spec$servers[[1]]$url)
+    line <- gsub("\n", "\n#* ", line)
+    c(lines, line)
+  }
+
+  # Info Object
   lines <- character()
-  lines <- l(lines, spec$info$title, "Title")
-  lines <- l(lines, spec$info$description, "Description")
-  lines <- l(lines, spec$info$termsOfService, "TOS")
-  lines <- l(lines, spec$info$contact$name, "ContactName")
-  lines <- l(lines, spec$info$contact$email, "ContactEmail")
-  lines <- l(lines, spec$info$contact$url, "ContactUrl")
-  lines <- l(lines, spec$info$license$name, "LicenseName")
-  lines <- l(lines, spec$info$license$url, "LicenseUrl")
-  lines <- l(lines, spec$info$version, "Version")
+  lines <- info_lines(lines, spec$info$title, "Title")
+  lines <- info_lines(lines, spec$info$description, "Description")
+  lines <- info_lines(lines, spec$info$termsOfService, "TOS")
+  lines <- info_lines(lines, spec$info$contact$name, "Contact")
+  lines <- info_lines(lines, spec$info$license$name, "License")
+  lines <- info_lines(lines, spec$info$version, "Version")
+
+  # Tag Objects
+  lines <- c(lines, vapply(spec$tags, function(tag) {
+    if (grepl('\\s', tag$name)) {
+      tag$name <- paste0('"', gsub('"', "''", tag$name), '"')
+    }
+    value <- paste("#* @apiTags", tag$name, tag$description)
+    value <- gsub("\n", "\n#* ", value)
+  }, character(1)))
+
+  # Path Objects
+
 
   a <- c("title","description", "termsOfService", "contact", "license", "version", "bob")
   b <- c("Title","Description","TOS","Contact","License", "Version", "Bobby")
